@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">DeliveryService</string>
+    <string name="action_settings">Settings</string>
+    <string name="edit_message">Edit a message</string>
+    <string name="send_email">Send e-mail</string>
+    <string name="add_email">Enter email address</string>
+    <string name="title_email">Title</string>
+    <string name="description_email">Description</string>
+    <string name="add_name">Name</string>
+    <string name="add_address">Address</string>
+    <string name="add_submit">Save</string>
+</resources>
