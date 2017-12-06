@@ -7,6 +7,16 @@
     <string name="title_email">Title</string>
     <string name="description_email">Description</string>
     <string name="add_name">Name</string>
-    <string name="add_address">Address</string>
+    <string name="add_description">Description</string>
     <string name="add_submit">Save</string>
+    <string name="date_picker_title">Start Date</string>
+
+
+    <string name="no_comments">No comments</string>
+    <string name="loading_comments">Loading comments...</string>
+    <string name="loading_products">Loading products...</string>
+    <string name="cd_products_list">Products list</string>
+    <string name="cd_comments_list">Comments list</string>
+    <string name="cd_product_name">Name of the product</string>
+
 </resources>

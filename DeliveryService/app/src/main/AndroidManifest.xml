@@ -16,7 +16,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".SendActivity" />
-        <activity android:name=".EditActivity"></activity>
+        <activity android:name=".EditActivity" />
+        <activity android:name=".EditProductActivity" />
+        <activity android:name=".DetailsActivity"></activity>
+        <activity android:name="org.achartengine.GraphicalActivity" />
     </application>
 
 </manifest>
