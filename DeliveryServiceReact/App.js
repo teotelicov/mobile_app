@@ -5,72 +5,281 @@
  */
 
 import React, { Component } from 'react';
-import { TextInput, Button, StyleSheet, Text, View, ScrollView, FlatList, AppRegistry, Picker } from 'react-native';
-import { Repository } from "./repository.js";
-import { StackNavigator } from 'react-navigation';
-import * as Communications from 'react-native-communications';
+import {
+    Button,
+    ListView,
+    Platform,
+    StyleSheet,
+    Text,
+    TouchableHighlight,
+    AsyncStorage,
+    View,
+    ScrollView,
+    TextInput,
+    Picker,
 
-class MainScreen extends React.Component {
+} from 'react-native';
+import { StackNavigator } from 'react-navigation';
+import PopupDialog from "react-native-popup-dialog/src/PopupDialog";
+
+const offersList = [
+    {
+        id: 1,
+        productId:1,
+        deliveryId:1,
+        price:15,
+        date:"11/12/2017"
+    },
+    {
+        id: 2,
+        productId:1,
+        deliveryId:2,
+        price:17,
+        date:"11/12/2017"
+    }
+    ,
+    {
+        id: 3,
+        productId:2,
+        deliveryId:1,
+        price:20,
+        date:"15/12/2017"
+    }
+];
+productList = [
+    {
+        id: 1,
+        name: 'Pizza Capricciosa',
+        description: 'Description1'
+    },
+    {
+        id: 2,
+        name: 'Pizza Diavola',
+        description: 'Description2'
+    },
+    {
+        id: 3,
+        name: 'Pizza Primavera',
+        description: 'Description3'
+    }
+];
+deliveryList = [
+    {
+        id: 1,
+        name: 'Pizza Hut',
+        address: 'Address1'
+    },
+    {
+        id: 2,
+        name: 'Pizza Grande',
+        address: 'Address2'
+    },
+    {
+        id: 3,
+        name: 'Pizza Venezia',
+        address: 'Address3'
+    }
+];
+
+
+export class MainScreen extends React.Component {
+    static navigationOptions = {
+        title: 'Delivery Services',
+    };
     constructor(props) {
         super(props);
-        this.state = {
-            refreshing: false,
-        };
-        this.onRefresh = this.onRefresh.bind(this);
-        this.repository = new Repository();
+        this.products = [];
+        this.deliveries = [];
+        this.name ="";
+        this.deliveries="";
+        this.state = {dataSourceProducts: [],dataSourceOffers: [], offers: []};
+        this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+        this.loadData();
     }
 
-    static navigationOptions = {
-        title: 'Welcome'
-    };
-
-    onRefresh() {
-        this.setState({refreshing: true});
-        this.setState({refreshing: false});
+    componentWillMount() {
+        this.loadData();
     }
+
+    // componentDidMount() {
+    //     console.log("Before persisting books");
+    //     AsyncStorage.setItem('products',
+    //         JSON.stringify(productList)).then(() => {
+    //         console.log("Yay! content persisted successfully!");
+    //     }).catch((error) => {
+    //         console.log("Unable to persist the content" + error);
+    //     });
+    //     AsyncStorage.setItem('deliveries',
+    //         JSON.stringify(deliveryList)).then(() => {
+    //         console.log("Yay! content persisted successfully!");
+    //     }).catch((error) => {
+    //         console.log("Unable to persist the content" + error);
+    //     });
+    //     AsyncStorage.setItem('offers',
+    //         JSON.stringify(offersList)).then(() => {
+    //         console.log("Yay! content persisted successfully!");
+    //     }).catch((error) => {
+    //         console.log("Unable to persist the content" + error);
+    //     });
+    //     this.loadData();
+    // }
+
+    async loadData() {
+
+        console.log("Before retrieving content");
+        await AsyncStorage.getItem('offers').then((value) => {
+            // console.log("Retrieved from storage:" + value);
+            this.state.offers = JSON.parse(value);
+            console.log(this.state.offers.length);
+            AsyncStorage.getItem('products').then((value) => {
+                // console.log("Retrieved from storage:" + value);
+                this.products = JSON.parse(value);
+                console.log(this.products.length);
+
+                this.setState({
+                    dataSourceProducts: this.ds.cloneWithRows(this.products)
+                });
+
+            }).catch((error) => {
+                console.log("Unable to retrieve deliveries" + error);
+            });
+            AsyncStorage.getItem('deliveries').then((value) => {
+
+                // console.log("Retrieved from storage:" + value);
+                this.deliveries = JSON.parse(value);
+                console.log(this.deliveries.length);
+
+                this.setState({
+                    dataSourceDeliveries: this.ds.cloneWithRows(this.deliveries)
+                });
+            }).catch((error) => {
+                    console.log("Unable to retrieve deliveries" + error);
+            });
+        }
+        ).catch((error) => {
+            console.log("Unable to retrieve offers" + error);
+        });
+
+    }
+
+    getOffers(productId) {
+        let offersOfProducts = [];
+        console.log("app all" + this.state.offers.length);
+        for(let i=0; i < this.state.offers.length; ++i) {
+            if(this.state.offers[i].productId === productId) {
+                offersOfProducts = offersOfProducts.concat(this.state.offers[i]);
+
+            }
+        }
+        console.log("app " + offersOfProducts.length);
+        return offersOfProducts;
+    }
+
+    getDeliveries(productId) {
+
+        let deliveriesOfProducts = [];
+
+        for(let i=0; i < this.state.offers.length; ++i) {
+            if(this.state.offers[i].productId === productId) {
+
+                for(let j=0; j < this.deliveries.length; ++j)
+                {
+                if(this.deliveries[j].id === this.state.offers[i].deliveryId)
+                 {
+                     deliveriesOfProducts = deliveriesOfProducts.concat(this.deliveries[j]);
+                 }
+                }
+
+            }
+        }
+        return deliveriesOfProducts;
+    }
+
 
     render() {
-        let r_elems = this.repository.deliveryServices;
-        let datas = [];
-        for (let i = 0; i < r_elems.length; i++) {
-            datas.push({key: i, value: r_elems[i]});
-        }
         const { navigate } = this.props.navigation;
+        this.state.dataSource = this.ds.cloneWithRows(this.products);
         return (
             <View>
-              <ScrollView>
-                <FlatList
-                    data={datas}
-                    renderItem={({item}) =>
-                        <View>
-                          <Text
-                                onPress={() => navigate('Edit', {
-                                    obj: item.value,
-                                    products: this.repository.products,
-                                    refreshing: this.onRefresh,
-                                })}>{item.value.title}</Text>
-                          <Text
-                                onPress={() => navigate('Edit', {
-                                    obj: item.value,
-                                    products: this.repository.products,
-                                    refreshing: this.onRefresh,
-                                })}>{item.value.details}</Text>
-                          <Text
-                                onPress={() => navigate('Edit', {
-                                    obj: item.value,
-                                    products: this.repository.products,
-                                    refreshing: this.onRefresh,
-                                })}>{item.value.product.name}</Text>
-                          <Text></Text>
-                        </View>
-                    }
+                <ScrollView>
+                    <ListView
+                        dataSource={this.state.dataSource}
+                        renderRow={(item) =>
+                            <View>
+                                <Text
+                                    onPress={() =>
+                                        navigate('Edit',{
+                                            data: {
+                                                obj: item.value,
+                                                deliveries:this.getDeliveries(item.id),
+                                                offers: this.getOffers(item.id),
+                                                name: item.name,
+                                                productId: item.id,
+                                                description: item.description,
+                                                allOffers: this.state.offers,
+                                                allProducts: this.products
+                                            }
+                                        })}
+                                >{item.name}</Text>
+                            </View>}
+                    />
+                </ScrollView>
+                <Button
+                    onPress={() => this.popupDialog.show()}
+                    title="Add product"
                 />
-              </ScrollView>
-                <Button style={styles.emailbutton} onPress={() => navigate('SendEmail')} title="Send E-mail" />
+                <PopupDialog
+                    ref={(popupDialog) => {
+                        this.popupDialog = popupDialog;
+                    }}>
+                    <View>
+                        <Text>Name:</Text>
+                        <TextInput
+                            onChangeText={(text) => this.setState({name: text})}
+                            value={this.state.name}
+                        />
+                        <Text>Description:</Text>
+                        <TextInput
+                            onChangeText={(text) => this.setState({description: text})}
+                            value={this.state.description}
+                        />
+                        <Button
+                            onPress={() => {
+                                this.saveProduct();
+                                this.popupDialog.dismiss();
+                            }}
+                            title="Add offer"
+                        />
+                    </View>
+                </PopupDialog>
             </View>
+
+
         );
     }
+    async saveProduct() {
+        let newProduct = {
+            //id:  ,
+            //name:  ,
+            //description: ,
+        };
+
+        console.log("saving " + newProduct);
+        this.state.products.push(newProduct);
+        this.setState({
+            dataSource: this.ds.cloneWithRows(this.state.products)
+        }, ()=> this.persistProducts());
+    }
+
+    async persistProducts() {
+        await AsyncStorage.setItem('products', JSON.stringify(this.state.products)).then(() => {
+            console.log("Reviews persisted successfully! :)");
+        }).catch((error) => {
+            console.log("Unable to persist the content :(" + error);
+        });
+    }
 }
+
 class SendMailScreen extends React.Component {
     constructor(props) {
         super(props);
@@ -106,62 +315,181 @@ class SendMailScreen extends React.Component {
 }
 
 class EditScreen extends React.Component {
+
     constructor(props) {
         super(props);
-        const {state} = this.props.navigation;
+        this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
         this.state = {
-            name: state.params.obj.name,
-            address: state.params.obj.address,
-            product: state.params.obj.product.name,
+            name: "",
+            description: "",
+            deliveryId: -1,
+            date: "",
+            price: "",
+            productId: -1,
+            deliveries: [],
+            offers: [],
+            allOffers: [],
+            dataSource: [],
         };
     }
 
     render() {
-        const {state} = this.props.navigation;
-        const {goBack} = this.props.navigation;
+
+        const {navigate} = this.props.navigation;
+        const {params} = this.props.navigation.state;
+
+        this.state.name = params.data.name;
+        this.state.description = params.data.description;
+        this.state.offers = params.data.offers;
+        this.state.deliveries = params.data.deliveries;
+        this.state.allOffers = params.data.allOffers;
+        this.state.productId = params.data.productId;
+        this.state.dataSource = this.ds.cloneWithRows(this.state.deliveries);
+
         return (
-            <View style={{alignItems: "center"}}>
+            <View style={{backgroundColor: '#EFEFF4', flex: 1}}>
+                <Button
+                    onPress={() => this.popupDialog.show()}
+                    title="Add offer"
+                />
+
+                <Button
+                    onPress={() => {
+                        if(this.state.products[this.state.productId].name !== item.name
+                            || this.state.products[this.state.productId].description !== item.description
+                        ){
+
+                            this.state.products[this.state.productId].name = item.name;
+                            this.state.products[this.state.productId].description = item.description;
+
+                            const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+                            this.setState({dataSource: ds.cloneWithRows(this.state.products)});
+
+                            objIndex = this.state.products.findIndex((obj => obj.id === item.id));
+
+                            if (objIndex >= 0) {
+                                this.state.products[this.state.productId].name = item.name;
+                                this.state.products[this.state.productId].description = item.description;
+                                this.persistReviews();
+                            }
+                        }
+                    }}
+                    title="Update product"
+                />
+
                 <TextInput
                     style={{marginTop: "5%", width: "90%", borderWidth: 1, backgroundColor: 'white'}}
                     onChangeText={(text) => this.setState({name: text})}
                     value={this.state.name}
+
                 />
                 <TextInput
-                    style={{marginTop: "5%", width: "90%",borderWidth: 1, backgroundColor: 'white'}}
-                    onChangeText={(text) => this.setState({address: text})}
-                    value={this.state.address}
+                    style={{marginTop: "5%", width: "90%", borderWidth: 1, backgroundColor: 'white'}}
+                    onChangeText={(text) => this.setState({description: text})}
+                    value={this.state.description}
+
                 />
-                <Picker
-                    style={{marginTop: "5%", width: "90%",borderWidth: 1, backgroundColor: 'white'}}
-                    selectedValue={this.state.product}
-                    onValueChange={(itemValue, itemIndex) => {
-                        this.setState({product: itemValue});
-                    }}
-                >
-                    {state.params.products.map((item, index) => <Picker.Item key={item.name} label={item.name} value={item.name} />)}
-                </Picker>
-                <Button onPress={() => {
-                    let found = false;
-                    let prod = null;
-                    for (let i = 0; i < state.params.products.length; i++) {
-                        if (this.state.product === state.params.products[i].name) {
-                            found = true;
-                            prod= state.params.products[i];
-                        }
-                    }
-                    if (found) {
-                        state.params.obj.name = this.state.name;
-                        state.params.obj.address = this.state.address;
-                        state.params.obj.product = prod;
-                        state.params.refreshing();
-                        goBack(null);
-                    }
 
-                }} title={"Save"}/>
+                <ListView
+                    dataSource={this.state.dataSource}
+                    renderRow={(item, sectionID, rowID) =>
+                        <View style={{flex: 1, flexDirection: 'row'}}>
+                            <Text
+                                onPress={() => navigate('Offer Details',
+                                    {
+                                        deliveryId: params.data.deliveryId, offer: item,
+                                        allProducts: params.data.allProducts, allOffers: this.state.allOffers,
+                                        onSelect: this.onSelect
+                                    })}
+                            >{item.name}</Text>
+                            <Button
+                                onPress={() => this.deleteOffer(rowID)}
+                                title="Delete"
+                                style={{flex: 1}}
+                            />
+                        </View>}
+                />
+                <PopupDialog
+                    ref={(popupDialog2) => {
+                        this.popupDialog = popupDialog2;
+                    }}>
+                    <View>
+                        <Picker
+                            selectedValue={this.state.deliveryId}
+                            onValueChange={(itemValue, itemIndex) => this.setState({deliveryId: itemValue})}>
+                            <Picker.Item label="Pizza Hut" value="1"/>
+                            <Picker.Item label="Pizza Grande" value="2"/>
+                            <Picker.Item label="Pizza Venezia" value="3"/>
+                        </Picker>
+                        <Text>Price:</Text>
+                        <TextInput
+                            onChangeText={(text) => this.setState({price: text})}
+                            value={this.state.price}
+                        />
+                        <Button
+                            onPress={() => {
+                                this.saveOffer(this.state.productId);
+                                this.popupDialog.dismiss();
+                            }}
+                            title="Add offer"
+                        />
+                    </View>
+                </PopupDialog>
+
             </View>
-
         );
     }
+
+    async saveOffer(product_id2) {
+        let newOffer = {
+            id: this.getValidId(),
+            product_id: product_id2,
+            delivery_id: this.state.deliveryId,
+            price: this.state.price,
+            date: new Date()
+        };
+
+        console.log("saving " + newOffer);
+        this.state.offers.push(newOffer);
+        this.state.allOffers.push(newOffer);
+        this.setState({
+            dataSource: this.ds.cloneWithRows(this.state.offers)
+        }, ()=> this.persistOffers());
+    }
+
+    deleteOffer(id) {
+        console.log("delete pressed " + id);
+        let deletedOffer = this.state.offers.splice(id, 1);
+        this.setState({
+            dataSource: this.ds.cloneWithRows(this.state.offers)
+        });
+        let pos = this.state.allOffers.findIndex((obj => obj.id === deletedOffer[0].id)); // position in big list of review to be deleted
+        console.log(deletedOffer);
+        this.state.allOffers.splice(pos, 1); // 1 = delete count
+        this.persistOffers();
+    }
+
+    async persistOffers() {
+        await AsyncStorage.setItem('offers', JSON.stringify(this.state.allOffers)).then(() => {
+            console.log("Reviews persisted successfully! :)");
+        }).catch((error) => {
+            console.log("Unable to persist the content :(" + error);
+        });
+
+    }
+
+    getValidId() {
+        let maxId = -1;
+        for(let i = 0; i < this.state.allOffers.length; ++i) {
+            if(this.state.allOffers[i].id > maxId) {
+                maxId = this.state.allOffers[i].id;
+            }
+        }
+        return maxId + 1;
+    }
+
+
+
 }
 
 const NavigApp = StackNavigator({
@@ -170,26 +498,23 @@ const NavigApp = StackNavigator({
     Edit: {screen: EditScreen}
 });
 
-export default class App extends React.Component{
+export default class App extends Component<{}> {
     render() {
         return <NavigApp />;
     }
-};
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F5FCFF',
+    },
+    bookTitle: {
+        fontSize: 20,
+        textAlign: 'center',
+        margin: 10,
+        color: 'blue'
+    },
 });
