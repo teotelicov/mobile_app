@@ -215,8 +215,9 @@ public class MainActivity extends AppCompatActivity {
                     product.setDescription(data.getStringExtra("description"));
                     this.db.productDao().insert(product);
                     this.db.productDao().getEntries();
-                    this.adapter.notifyDataSetChanged();
-                    refresh();
+                    this.adapter.add(product);
+                    //refresh();
+
                 }
                 else if(data.getIntExtra("edit", -1) == 3)
                 {
@@ -234,8 +235,8 @@ public class MainActivity extends AppCompatActivity {
 
                     this.db.offerDao().insert(offer);
                     this.db.offerDao().getEntries();
-                    this.adapter.notifyDataSetChanged();
-                    refresh();
+                    //this.adapter.notifyDataSetChanged();
+                    //refresh();
                 }
                 else{
 
@@ -244,10 +245,13 @@ public class MainActivity extends AppCompatActivity {
                     product.setName(data.getStringExtra("name"));
                     product.setDescription(data.getStringExtra("description"));
 
+
+                    this.db.productDao().loadProduct(product.getId());
                     this.db.productDao().update(product);
                     this.db.productDao().getEntries();
                     this.adapter.notifyDataSetChanged();
                     refresh();
+
 
 
                 }
