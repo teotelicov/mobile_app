@@ -1,57 +1,41 @@
 package cs.ubbcluj.ro.deliveryservice.domain;
 
-import android.util.EventLogTags;
-
-import java.io.Serializable;
-import java.util.List;
-
 /**
- * Created by Teo on 10.11.2017.
+ * Created by Belal on 1/27/2017.
  */
 
-public class Product implements Serializable{
-
-    private long id;
-
+public class Product {
     private String name;
-
     private String description;
+    private int status;
 
-    public Product(){}
-
-    public Product(long id, String name, String description) {
-        this.id = id;
+    public Product(String name, String description, int status) {
         this.name = name;
         this.description = description;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
+        this.status = status;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getDescription() {
         return description;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-    @Override
-    public String toString() {
-        return name + " ";
+    public void setStatus(int status) {
+        this.status = status;
     }
-
 }
