@@ -96,6 +96,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return true;
     }
 
+    public boolean updateProduct(int id, String name, String description, int status) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(COLUMN_NAME, name);
+        contentValues.put(COLUMN_DESCRIPTION, description);
+        contentValues.put(COLUMN_STATUS, status);
+
+        db.update(TABLE_NAME, contentValues, COLUMN_ID + "=" + id + " AND " + COLUMN_STATUS + " = " + MainActivity.DATA_SYNCED_WITH_SERVER, null);
+
+        contentValues.put(COLUMN_STATUS, MainActivity.ADD_NOT_SYNCED_WITH_SERVER);
+        db.update(TABLE_NAME, contentValues, COLUMN_ID + "=" + id + " AND " + COLUMN_STATUS + " = " + MainActivity.ADD_NOT_SYNCED_WITH_SERVER, null);
+        db.close();
+        return true;
+    }
+
     /*
     * this method will give us all the products stored in sqlite
     * */
@@ -106,9 +122,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return c;
     }
 
-    /*
-    * this method will give us all the products stored in sqlite
-    * */
+    public Cursor getProduct(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_ID + "=" +id;
+        Cursor c = db.rawQuery(sql, null);
+        return c;
+    }
+
     public Cursor getProductId(String name, String description) {
         SQLiteDatabase db = this.getReadableDatabase();
         String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_NAME + " LIKE '%" + name + "%' AND " + COLUMN_DESCRIPTION + " LIKE '%" +description + "%'";
@@ -122,7 +142,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     * */
     public Cursor getUnsyncedProducts() {
         SQLiteDatabase db = this.getReadableDatabase();
-        String sql = "SELECT DISTINCT * FROM " + TABLE_NAME + " WHERE " + COLUMN_STATUS + " = 3 OR " + COLUMN_STATUS + " = 2;";
+        String sql = "SELECT DISTINCT * FROM " + TABLE_NAME + " WHERE " + COLUMN_STATUS + " = 3 OR "+ COLUMN_STATUS + " = 4 OR " + COLUMN_STATUS + " = 2;";
         Cursor c = db.rawQuery(sql, null);
         return c;
     }

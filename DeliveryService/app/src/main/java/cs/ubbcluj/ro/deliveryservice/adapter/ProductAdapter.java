@@ -54,7 +54,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         //if the synced status is 0 displaying
         //queued icon
         //else displaying synced icon
-        if (product.getStatus() == 2 || product.getStatus() == 3)
+        if (product.getStatus() == 2 || product.getStatus() == 3 || product.getStatus() == 4 )
             imageViewStatus.setBackgroundResource(R.drawable.stopwatch);
         else
             imageViewStatus.setBackgroundResource(R.drawable.success);

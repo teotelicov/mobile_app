@@ -68,6 +68,14 @@ public class NetworkStateChecker extends BroadcastReceiver {
                                 cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_DESCRIPTION))
                         );
                         }
+                        else if( cursor.getInt(cursor.getColumnIndex(DatabaseHelper.COLUMN_STATUS)) == MainActivity.UPDATE_NOT_SYNCED_WITH_SERVER)
+                        {
+                            updateProduct(
+                                    cursor.getInt(cursor.getColumnIndex(DatabaseHelper.COLUMN_ID)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_NAME)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.COLUMN_DESCRIPTION))
+                            );
+                        }
                     } while (cursor.moveToNext());
                 }
             }
@@ -128,6 +136,45 @@ public class NetworkStateChecker extends BroadcastReceiver {
                             if (!obj.getBoolean("error")) {
                                 //delete from sqlite
                                 db.deleteProduct(id);
+
+                                //sending the broadcast to refresh the list
+                                context.sendBroadcast(new Intent(MainActivity.DATA_SAVED_BROADCAST));
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("id", String.valueOf(id));
+                params.put("name", name);
+                params.put("description", description);
+                return params;
+            }
+        };
+
+        VolleySingleton.getInstance(context).addToRequestQueue(stringRequest);
+    }
+
+    private void updateProduct(final int id, final String name, final String description) {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, MainActivity.URL_UPDATE_PRODUCT,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+
+                                //updating the status in sqlite
+                                db.updateProductStatus(id, MainActivity.DATA_SYNCED_WITH_SERVER);
 
                                 //sending the broadcast to refresh the list
                                 context.sendBroadcast(new Intent(MainActivity.DATA_SAVED_BROADCAST));

@@ -38,8 +38,9 @@ import cs.ubbcluj.ro.deliveryservice.helper.DatabaseHelper;
 public class MainActivity extends AppCompatActivity {
 
     final Integer REQUEST_CODE = 0;
-    public static final String URL_SAVE_PRODUCT = "http://192.168.1.103:85/DeliveryServiceApi/saveProduct.php";
-    public static final String URL_DELETE_PRODUCT = "http://192.168.1.103:85/DeliveryServiceApi/deleteProduct.php?id=";
+    public static final String URL_SAVE_PRODUCT = "http://192.168.1.104:85/DeliveryServiceApi/saveProduct.php";
+    public static final String URL_DELETE_PRODUCT = "http://192.168.1.104:85/DeliveryServiceApi/deleteProduct.php?id=";
+    public static final String URL_UPDATE_PRODUCT = "http://192.168.1.104:85/DeliveryServiceApi/updateProduct.php";
 
     //database helper object
     private DatabaseHelper db;
@@ -132,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
 
                 goToUpdateIntent(pos);
-               // refresh();
+
             } });
         alertDialog.setButton3("See details and offers", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
@@ -279,8 +280,10 @@ public class MainActivity extends AppCompatActivity {
                             } else {
                                 //if there is some error
                                 //saving the product to sqlite with status unsynced
-                                //db.updateProductStatus(id, DELETE_NOT_SYNCED_WITH_SERVER);
+
                                 updateStatusDeleteProductToLocalStorage(id,name,description, DELETE_NOT_SYNCED_WITH_SERVER);
+                                products.remove(id);
+                                refreshList();
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -292,8 +295,9 @@ public class MainActivity extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         progressDialog.dismiss();
                         //on error storing the product to sqlite with status unsynced
-                        //db.updateProductStatus(id, DELETE_NOT_SYNCED_WITH_SERVER);
                         updateStatusDeleteProductToLocalStorage(id,name,description, DELETE_NOT_SYNCED_WITH_SERVER);
+                        products.remove(id);
+                        refreshList();
 
                     }
                 }) {
@@ -319,6 +323,84 @@ public class MainActivity extends AppCompatActivity {
                 int ID = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.COLUMN_ID));
                 db.deleteProduct(ID);
                 products.remove(id);
+                refreshList();
+            } while (cursor.moveToNext());
+        }
+    }
+
+    private void updateProductToServer(int i, String n, String d) {
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Updating Product...");
+        progressDialog.show();
+
+        final int id = i;
+        final String name = n;
+        final String description = d;
+
+
+        int ID = 0;
+        Cursor cursor = db.getProductId(products.get(id).getName(),products.get(id).getDescription());
+        if (cursor.moveToFirst()) {
+            do {
+                ID = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.COLUMN_ID));
+            } while (cursor.moveToNext());
+        }
+
+        final int ID2 = ID;
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_UPDATE_PRODUCT,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        progressDialog.dismiss();
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+                                //if there is a success
+                                //storing the product to sqlite with status synced
+                                updateProductToLocalStorage(id,name,description, DATA_SYNCED_WITH_SERVER);
+                            } else {
+                                //if there is some error
+                                //saving the product to sqlite with status unsynced
+                                updateProductToLocalStorage(id,name,description, UPDATE_NOT_SYNCED_WITH_SERVER);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        progressDialog.dismiss();
+                        //on error storing the product to sqlite with status unsynced
+                        updateProductToLocalStorage(id,name,description, UPDATE_NOT_SYNCED_WITH_SERVER);
+                    }
+                }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("id", String.valueOf(ID2));
+                params.put("name", name);
+                params.put("description", description);
+                return params;
+            }
+        };
+
+        VolleySingleton.getInstance(this).addToRequestQueue(stringRequest);
+    }
+
+    //updating the product to local storage
+    private void updateProductToLocalStorage(int id, String name,String description, int status) {
+
+        Cursor cursor = db.getProductId(products.get(id).getName(), products.get(id).getDescription());
+        if (cursor.moveToFirst()) {
+            do {
+                int ID = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.COLUMN_ID));
+                db.updateProduct(ID,name,description, status);
+                products.get(id).setName(name);
+                products.get(id).setDescription(description);
+                products.get(id).setStatus(status);
                 refreshList();
             } while (cursor.moveToNext());
         }
@@ -376,11 +458,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void goToUpdateIntent(int id) {
 
-//        Intent intent =  new Intent(this, EditProductActivity.class);
-//        intent.putExtra("name", MainActivity.this.db.productDao().getEntries().get(id).getName());
-//        intent.putExtra("description", MainActivity.this.db.productDao().getEntries().get(id).getDescription());
-//        intent.putExtra("edit", MainActivity.this.db.productDao().getEntries().get(id).getId());
-//       startActivityForResult(intent, REQUEST_CODE);
+        Intent intent =  new Intent(this, EditProductActivity.class);
+        intent.putExtra("name", products.get(id).getName());
+        intent.putExtra("description", products.get(id).getDescription());
+        intent.putExtra("edit", id);
+       startActivityForResult(intent, REQUEST_CODE);
     }
 
     public void goToDeleteIntent(int id) {
@@ -410,8 +492,8 @@ public class MainActivity extends AppCompatActivity {
                     saveProductToServer(data.getStringExtra("name"),data.getStringExtra("description"));
 
                 }
-                else if(data.getIntExtra("edit", -1) == 3)
-                {
+               // else if(data.getIntExtra("edit", -1) == 3)
+             //   {
 
 //                    OfferEntity offer = new OfferEntity();
 //                    offer.setProduct_id(this.db.productDao().getEntries(data.getStringExtra("product")).getId());
@@ -428,9 +510,10 @@ public class MainActivity extends AppCompatActivity {
 //                    this.db.offerDao().getEntries();
                     //this.adapter.notifyDataSetChanged();
                     //refresh();
-                }
+              //  }
                 else{
 
+                    updateProductToServer(data.getIntExtra("edit", -1),data.getStringExtra("name"),data.getStringExtra("description"));
 //                    ProductEntity product = new ProductEntity();
 //                    product.setId( data.getIntExtra("edit", -1));
 //                    product.setName(data.getStringExtra("name"));
@@ -442,6 +525,8 @@ public class MainActivity extends AppCompatActivity {
 //                    this.db.productDao().getEntries();
 //                    this.adapter.notifyDataSetChanged();
 //                    refresh();
+
+
 
 
 
