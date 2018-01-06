@@ -1,9 +1,5 @@
 package cs.ubbcluj.ro.deliveryservice.domain;
 
-/**
- * Created by Belal on 1/27/2017.
- */
-
 public class Product {
     private String name;
     private String description;

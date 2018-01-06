@@ -7,52 +7,37 @@ import java.util.Date;
  * Created by Teo on 30.11.2017.
  */
 
-public class Offer implements Serializable{
+public class Offer {
 
-    public long id;
+    public int product_id;
 
-    public Product product;
-
-    public DeliveryService deliveryService;
+    public int delivery_id;
 
     public double price;
 
-    public Date addedAt;
+    public String addedAt;
 
-    public Offer()
-    {
-
-    }
-    public Offer(long id, Product product, DeliveryService deliveryService, double price, Date addedAt) {
-        this.id = id;
-        this.product = product;
-        this.deliveryService = deliveryService;
+    public Offer(int product_id, int delivery_id, double price, String addedAt) {
+        this.product_id = product_id;
+        this.delivery_id = delivery_id;
         this.price = price;
         this.addedAt = addedAt;
     }
 
-    public long getId() {
-        return id;
+    public int getProduct_id() {
+        return product_id;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setProduct_id(int product_id) {
+        this.product_id = product_id;
     }
 
-    public Product getProduct() {
-        return product;
+    public int getDelivery_id() {
+        return delivery_id;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
-    public DeliveryService getDeliveryService() {
-        return deliveryService;
-    }
-
-    public void setDeliveryService(DeliveryService deliveryService) {
-        this.deliveryService = deliveryService;
+    public void setDelivery_id(int delivery_id) {
+        this.delivery_id = delivery_id;
     }
 
     public double getPrice() {
@@ -63,16 +48,11 @@ public class Offer implements Serializable{
         this.price = price;
     }
 
-    public Date getAddedAt() {
+    public String getAddedAt() {
         return addedAt;
     }
 
-    public void setAddedAt(Date addedAt) {
+    public void setAddedAt(String addedAt) {
         this.addedAt = addedAt;
-    }
-
-    @Override
-    public String toString() {
-        return product.getName() + " " + deliveryService.getName() + " " + price + " LEI";
     }
 }

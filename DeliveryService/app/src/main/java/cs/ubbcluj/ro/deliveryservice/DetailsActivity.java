@@ -70,7 +70,8 @@ public class DetailsActivity extends AppCompatActivity {
 
         ListView listView2 = (ListView) findViewById(R.id.list_deliveries);
         List<String> deliveries = new ArrayList<>(1000);
-        ArrayAdapter<String> adapter2 =new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, getIntent().getStringArrayExtra("offers"));
+        ArrayList<String> offers = getIntent().getStringArrayListExtra("offers");
+        ArrayAdapter<String> adapter2 =new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, offers);
         listView2.setAdapter(adapter2);
         adapter2.notifyDataSetChanged();
         

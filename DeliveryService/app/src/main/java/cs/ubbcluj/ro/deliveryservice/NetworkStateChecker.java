@@ -78,6 +78,22 @@ public class NetworkStateChecker extends BroadcastReceiver {
                         }
                     } while (cursor.moveToNext());
                 }
+                Cursor cursor2 = db.getUnsyncedOffers();
+
+                if (cursor2.moveToFirst()) {
+                    do {
+                        if( cursor2.getInt(cursor2.getColumnIndex(DatabaseHelper.COLUMN_STATUS)) == MainActivity.OFFER_NOT_SYNCED_WITH_SERVER)
+                        {
+                            saveOffer(
+                                    cursor2.getInt(cursor2.getColumnIndex(DatabaseHelper.COLUMN_PRODUCT_ID)),
+                                    cursor2.getInt(cursor2.getColumnIndex(DatabaseHelper.COLUMN_DELIVERY_ID)),
+                                    cursor2.getDouble(cursor2.getColumnIndex(DatabaseHelper.COLUMN_PRICE)),
+                                    cursor2.getString(cursor2.getColumnIndex(DatabaseHelper.COLUMN_ADDED_AT))
+                            );
+                        }
+
+                    } while (cursor2.moveToNext());
+                }
             }
         }
     }
@@ -196,6 +212,46 @@ public class NetworkStateChecker extends BroadcastReceiver {
                 params.put("id", String.valueOf(id));
                 params.put("name", name);
                 params.put("description", description);
+                return params;
+            }
+        };
+
+        VolleySingleton.getInstance(context).addToRequestQueue(stringRequest);
+    }
+
+    private void saveOffer(final int product_id, final int delivery_id, final double price, final String added_at) {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, MainActivity.URL_SAVE_OFFER,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+
+                                //updating the status in sqlite
+                                db.updateOfferStatus(product_id,delivery_id, MainActivity.DATA_SYNCED_WITH_SERVER);
+
+                                //sending the broadcast to refresh the list
+                                context.sendBroadcast(new Intent(MainActivity.DATA_SAVED_BROADCAST));
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("product_id", String.valueOf(product_id));
+                params.put("delivery_id",String.valueOf(delivery_id));
+                params.put("price",String.valueOf(price));
+                params.put("added_at",added_at);
                 return params;
             }
         };

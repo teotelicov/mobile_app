@@ -71,7 +71,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerFragmen
     }
 
     public String formatDate(Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
         String addedDate = sdf.format(date);
         return addedDate;
     }
@@ -99,7 +99,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerFragmen
         intent.putExtra("edit", this.sendBack);
         intent.putExtra("product", ((Spinner) findViewById(R.id.spinnerProduct)).getSelectedItem().toString());
         intent.putExtra("delivery", ((Spinner) findViewById(R.id.spinnerDelivery)).getSelectedItem().toString());
-        intent.putExtra("date",((EditText)findViewById(R.id.edit_date)).getText().toString());
+        intent.putExtra("added_at",((EditText)findViewById(R.id.edit_date)).getText().toString());
         setResult(RESULT_OK, intent);
         finish();
     }

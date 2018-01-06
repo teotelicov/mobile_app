@@ -1,36 +1,17 @@
 package cs.ubbcluj.ro.deliveryservice.domain;
 
-import java.io.Serializable;
-import java.util.Date;
-import java.util.HashMap;
-
 /**
  * Created by Teo on 10.11.2017.
  */
 
-public class DeliveryService implements Serializable{
+public class DeliveryService{
 
-    private long id;
     private String name;
     private String address;
 
-
-    public DeliveryService(){
-
-    }
-
-    public DeliveryService(long id, String name, String address) {
-        this.id = id;
+    public DeliveryService(String name, String address) {
         this.name = name;
         this.address = address;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -47,10 +28,5 @@ public class DeliveryService implements Serializable{
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    @Override
-    public String toString() {
-        return name + " ";
     }
 }
