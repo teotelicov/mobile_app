@@ -11,10 +11,12 @@ import android.database.Cursor;
 import android.icu.text.SimpleDateFormat;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 
 import com.android.volley.AuthFailureError;
@@ -39,18 +41,25 @@ import cs.ubbcluj.ro.deliveryservice.domain.DeliveryService;
 import cs.ubbcluj.ro.deliveryservice.domain.Offer;
 import cs.ubbcluj.ro.deliveryservice.domain.Product;
 import cs.ubbcluj.ro.deliveryservice.helper.DatabaseHelper;
+import cs.ubbcluj.ro.deliveryservice.helper.SessionManager;
 
 
 public class MainActivity extends AppCompatActivity {
 
     final Integer REQUEST_CODE = 0;
-    public static final String URL_SAVE_PRODUCT = "http://192.168.0.102:85/DeliveryServiceApi/saveProduct.php";
-    public static final String URL_DELETE_PRODUCT = "http://192.168.0.102:85/DeliveryServiceApi/deleteProduct.php?id=";
-    public static final String URL_UPDATE_PRODUCT = "http://192.168.0.102:85/DeliveryServiceApi/updateProduct.php";
-    public static final String URL_SAVE_OFFER = "http://192.168.0.102:85/DeliveryServiceApi/saveOffer.php";
+    public static final String URL_SAVE_PRODUCT = "http://192.168.0.106:85/DeliveryServiceApi/saveProduct.php";
+    public static final String URL_DELETE_PRODUCT = "http://192.168.0.106:85/DeliveryServiceApi/deleteProduct.php?id=";
+    public static final String URL_UPDATE_PRODUCT = "http://192.168.0.106:85/DeliveryServiceApi/updateProduct.php";
+    public static final String URL_SAVE_OFFER = "http://192.168.0.106:85/DeliveryServiceApi/saveOffer.php";
+    // Server user login url
+    public static final String URL_LOGIN = "http://192.168.0.106:85/DeliveryServiceApi/login.php";
+    // Server user register url
+    public static String URL_REGISTER = "http://192.168.0.106:85/DeliveryServiceApi/register.php";
 
     //database helper object
     private DatabaseHelper db;
+
+    private SessionManager session;
 
     //View objects
     private ListView listViewProducts;
@@ -73,8 +82,12 @@ public class MainActivity extends AppCompatActivity {
     //Broadcast receiver to know the sync status
     private BroadcastReceiver broadcastReceiver;
 
-    //adapterobject for list view
+    //adapter object for list view
     private ProductAdapter productAdapter;
+
+    private Button btnLogout;
+    public static FloatingActionButton btnAddProduct;
+    public static FloatingActionButton btnAddOffer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,10 +96,28 @@ public class MainActivity extends AppCompatActivity {
 
         registerReceiver(new NetworkStateChecker(), new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
 
+        btnLogout = (Button) findViewById(R.id.btnLogout);
+        btnAddProduct = (FloatingActionButton) findViewById(R.id.floatingActionButton);
+        btnAddOffer = (FloatingActionButton) findViewById(R.id.floatingActionButton3);
+
+        final String admin = getIntent().getStringExtra("admin");
+
+        if(admin.equalsIgnoreCase("0"))
+        {
+            btnAddProduct.setVisibility(View.GONE);
+            btnAddOffer.setVisibility(View.GONE);
+        }
         //initializing views and objects
         db = new DatabaseHelper(this);
         products = new ArrayList<>();
         deliveryServices = new ArrayList<>();
+
+        // session manager
+        session = new SessionManager(getApplicationContext());
+
+        if (!session.isLoggedIn()) {
+            logoutUser();
+        }
 
 
         listViewProducts = (ListView) findViewById(R.id.listview1);
@@ -94,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                Show_Alert_box(view.getContext(),"Please select action.",position);
+                Show_Alert_box(view.getContext(),"Please select action.",position,admin);
 
             }
         });
@@ -115,6 +146,29 @@ public class MainActivity extends AppCompatActivity {
         //registering the broadcast receiver to update sync status
         registerReceiver(broadcastReceiver, new IntentFilter(DATA_SAVED_BROADCAST));
 
+        // Logout button click event
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                logoutUser();
+            }
+        });
+
+    }
+
+    /**
+     * Logging out the user. Will set isLoggedIn flag to false in shared
+     * preferences Clears the user data from sqlite users table
+     * */
+    private void logoutUser() {
+        session.setLogin(false);
+
+        db.deleteUsers();
+        // Launching the login activity
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
     @Override
     public void onResume() {
@@ -127,25 +181,31 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(broadcastReceiver);
     }
 
-    public void Show_Alert_box(Context context, String message, int position)
+
+    public void Show_Alert_box(Context context, String message, int position,String admin)
     {
         final int pos = position;
 
         final AlertDialog alertDialog = new  AlertDialog.Builder(context).create();
         alertDialog.setTitle("Product options");
 
-        alertDialog.setButton("Delete", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
+        if(admin.equalsIgnoreCase("1")) {
 
-                goToDeleteIntent(pos);
+            alertDialog.setButton("Delete", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
 
-            } });
-        alertDialog.setButton2("Update", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
+                    goToDeleteIntent(pos);
 
-                goToUpdateIntent(pos);
+                }
+            });
+            alertDialog.setButton2("Update", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
 
-            } });
+                    goToUpdateIntent(pos);
+
+                }
+            });
+        }
         alertDialog.setButton3("See details and offers", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
 

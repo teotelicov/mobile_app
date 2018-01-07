@@ -50,6 +50,17 @@
         app:layout_constraintEnd_toStartOf="@+id/floatingActionButton"
         app:srcCompat="@android:drawable/ic_dialog_dialer" />
 
+    <Button
+        android:id="@+id/btnLogout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/btn_logut_bg"
+        app:layout_constraintBottom_toTopOf="@+id/floatingActionButton3"
+        android:text="@string/btn_logout"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="8dp" />
+
     <ListView
         android:id="@+id/listview1"
         android:layout_width="match_parent"
