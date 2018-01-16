@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "735856621477",
+    "firebase_url": "https://deliveryservice2-de0dd.firebaseio.com",
+    "project_id": "deliveryservice2-de0dd",
+    "storage_bucket": "deliveryservice2-de0dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:735856621477:android:a7e7ad9e6bdf6a63",
+        "android_client_info": {
+          "package_name": "com.delivservice"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "735856621477-akn8shslcg8s3eurbvejr3p06b4sglbo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtKW-kEYYrTQ58HL49p0YfwuTJGa3GtKU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
